@@ -65,11 +65,10 @@ void launch_kernel(void) {
         {0x400000,0x400000+Strlen("Hello, RawBerryOS!")}
     };
 
-    const char* my_string = "Hello, RawBerryOS!";
     const int32_t start_address = 0x400000; // keep it as const
-    int32_t last_address = 0x400000 + Strlen(my_string);
+    int32_t last_address = 0x400000 + Strlen("Hello, RawBerryOS!");
     int32_t last = 1;
-    memwr(my_string, start_address, last_address);
+    memwr("Hello, RawBerryOS!", start_address, last_address);
     // to use end_adress do: start_address + Strlen(string)
 
     char* Keyboard_buffer;
