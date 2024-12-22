@@ -29,6 +29,6 @@ void logo(){
 void print_info(){
     vga_clear_screen();
     logo();
-    printf("rawberry is a os, lightweight and simple by RawBerry Team.'\n");
-    printf("version(running):dev-7071A\n");
+    vga_print_string("rawberry is a os, lightweight and simple by RawBerry Team.'\n");
+    vga_print_string("version(running):dev-7071A\n");
 }
