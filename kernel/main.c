@@ -13,6 +13,7 @@
 #include "../include/memory.h"
 #include "../include/ascii.h"
 #include "../include/math.h"
+#include "../drivers/fs.h"
 #include "../include/stdio.h" // :: There is no standard yet, either switch to "stdio.h" or comment it out until
 //                               :: there is implementation for it
 char* commands[] = {
@@ -33,42 +34,32 @@ void display() {
         vga_print_string("\n");
     }
 }
-void memory_print(memory_entry* memory_table, int32_t size){
-    int i = 0;
-    while (i < size){
-        vga_print_string("block: ");
-        vga_print_string(itol(memory_table[i].start_addr));  // Print start address
-        vga_print_string(" ");
-        vga_print_string(itol(memory_table[i].end_addr));    // Print end address
-        vga_print_string(" ");
-        
-        // Read and print memory contents from start to end address
-        char* memory_contents = memre(memory_table[i].start_addr, memory_table[i].end_addr);
-        vga_print_string(memory_contents);  // Print the contents of the memory block
-        vga_print_string("\n");
-        
-        i++;
+
+void fat_test(){
+    FAT fat;
+    fat.FAT_TABLE[0] = 0;
+    fat.blocks[0].next = 1;
+    for (int i = 0; i < 12; i++) {
+        fat.blocks[0].block[i] = 'A';
     }
+    fat.FAT_TABLE[1] = 1;
+    fat.blocks[1].next = -1;
+    for (int i = 0; i < 12; i++) {
+        fat.blocks[1].block[i] = 'B';
+    }
+    read_fat(&fat, 0);
 }
 
-void memory_write(memory_entry* memory_table, int32_t start, int32_t end, int32_t index, const char* string){
-    memwr(string, start, end);
-    memory_table[index].start_addr = start;
-    memory_table[index].end_addr = end;
-}
 
 void launch_kernel(void) {
     vga_initialize();
     vga_print_string("Welcome to RawBerry OS!\n");
     vga_print_string("[YANE TERMINAL 1.0.0]\n");
-    memory_entry memory_table[15] = {
-        {0x400000,0x400000+Strlen("Hello, RawBerryOS!")}
-    };
+    memory_entry memory_table[15] = {};
 
     const int32_t start_address = 0x400000; // keep it as const
     int32_t last_address = 0x400000 + Strlen("Hello, RawBerryOS!");
     int32_t last = 1;
-    memwr("Hello, RawBerryOS!", start_address, last_address);
     // to use end_adress do: start_address + Strlen(string)
 
     char* Keyboard_buffer;
@@ -108,6 +99,13 @@ void launch_kernel(void) {
             asm volatile ("ud2");
         } else if (strEql(strSlice(Keyboard_buffer, 0, 9), "mem-usage") == 0){
             memory_info(memory_table, 15);
+        } else if (strEql(strSlice(Keyboard_buffer, 0, 6), "delete") == 0){
+            const char* buffer = strSlice(Keyboard_buffer, 7, Strlen(Keyboard_buffer)-1);
+            int index = stol(buffer);
+            memory_delete(memory_table, index);
+            vga_print_string("memory deleted\n");
+        } else if (strEql(strSlice(Keyboard_buffer, 0, 3), "fat") == 0){
+            fat_test();
         }
     }
     return;
