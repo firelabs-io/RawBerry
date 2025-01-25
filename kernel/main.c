@@ -60,11 +60,11 @@ void palloc(size_t bytes, memory_entry* memory_table, int size) {
 
     for (int i = 0; i < size; i++) {
         if (memory_table[i].start_addr == 0 && memory_table[i].end_addr == 0) {
-            vga_print_string("found empty block");
+            vga_print_string("found empty block\n");
 
             if (i > 0) {
                 memory_table[i].start_addr = memory_table[i - 1].end_addr;
-            } else {
+            } else if(i==0) {
                 memory_table[i].start_addr = 0x400000;
             }
 
@@ -84,18 +84,37 @@ void palloc(size_t bytes, memory_entry* memory_table, int size) {
 
 void pfree(memory_entry* memory_table, int size, int index){
     if (index < size && index >= 0){
+        memwr("\0", memory_table[index].start_addr, memory_table[index].end_addr); // clear
         memory_table[index].start_addr = 0;
         memory_table[index].end_addr = 0;
         vga_print_string("freed the block\n");
     }
 }
+void prite(memory_entry* memory_table, int size, int index, char* msg){
+    if (index < size && index >= 0){
+        if (memory_table[index].start_addr != 0 && memory_table[index].end_addr != 0){
+            memwr(msg, memory_table[index].start_addr, memory_table[index].end_addr);
+        }
+    }
+}
 
+char* pread(memory_entry* memory_table, int size, int index){
+    if (index < size && index >= 0){
+        if (memory_table[index].start_addr != 0 && memory_table[index].end_addr != 0){
+            return memre(memory_table[index].start_addr, memory_table[index].end_addr);
+        }
+    }
+}
 void mem_test(){
     memory_entry memory_table[16] = {};
-    palloc(4, memory_table, 16);
+    palloc(16, memory_table, 16);
+    //memwr("Hello world!....", memory_table[0].start_addr, memory_table[0].end_addr); // worked
+    prite(memory_table, 16, 0, "Hello world!\n\0"); // now finally works
     memory_print(memory_table, 16);
     vga_put_char('\n');
+    vga_print_string(pread(memory_table, 16, 0));
     pfree(memory_table, 16, 0);
+    vga_put_char('\n');
     memory_print(memory_table, 16);
 }
 
