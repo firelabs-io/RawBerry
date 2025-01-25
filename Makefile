@@ -3,7 +3,7 @@ $(error You can only build this on Linux)
 endif
 
 CC = gcc -m32 -nostartfiles
-CFLAGS = -ffreestanding -nostdlib -Iinclude
+CFLAGS = -D_RAWBERRYOS -DRWB=1 -ffreestanding -nostdlib -Iinclude
 LDFLAGS = -T ./kernel/linker.ld
 OBJS = $(patsubst %.c,%.o,$(wildcard **/*.c))
 KERNEL = kernel.elf
