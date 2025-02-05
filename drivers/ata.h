@@ -80,9 +80,15 @@ void ata_read(uint32_t lba, void* buffer) {
 
         char char1 = (char)(buf[i] & 0xFF);       // Lower byte
         char char2 = (char)((buf[i] >> 8) & 0xFF); // Upper byte
+        buf[2 * i] = char1;
+        buf[2 * i + 1] = char2;
+        if ((char1 >= 32 && char1 <= 126) || char1 == '\n') {
+            vga_put_char(char1);
+        }
+        if ((char2 >= 32 && char2 <= 126) || char2 == '\n') {
+            vga_put_char(char2);
+        }
 
-        vga_put_char((char1 >= 32 && char1 <= 126) ? char1 : '.');
-        vga_put_char((char2 >= 32 && char2 <= 126) ? char2 : '.');
     }
     vga_print_string("\n");
 }

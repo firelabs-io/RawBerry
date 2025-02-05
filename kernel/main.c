@@ -118,6 +118,55 @@ void mem_test(){
     memory_print(memory_table, 16);
 }
 
+void exec_test(uint8_t a[5]){
+    for (int i = 0; i < 512; i++) {
+        if (i < 5){
+            buf[i] = a[i];
+        }
+        else{
+            buf[i] = 0;
+        }
+    }
+    uint32_t lba = 101;
+    ata_write(lba, buf);
+
+}
+void exec_read(){
+    uint32_t lba = 101;
+    ata_read(lba, buf);
+    uint8_t machine_code[5]; 
+    for (int i = 0; i < 5; i++) {
+        machine_code[i] = buf[i];
+    }
+    if (machine_code[0] == 184) {
+        vga_print_string("it was successful?\n");
+        
+        uint32_t original_eax, new_value;
+        
+        __asm__ volatile ("mov %%eax, %0" : "=r"(original_eax));
+
+        new_value = (uint32_t)machine_code[1] |
+                    ((uint32_t)machine_code[2] << 8) |
+                    ((uint32_t)machine_code[3] << 16) |
+                    ((uint32_t)machine_code[4] << 24);
+
+        __asm__ volatile (
+            "mov %1, %%eax"
+            : "=a"(new_value)  // Explicitly tell GCC that `EAX` is modified
+            : "r"(new_value)
+            : "memory"
+        );
+
+        vga_print_string(itol(new_value));
+
+        __asm__ volatile (
+            "mov %0, %%eax"
+            :: "r"(original_eax)
+            : "eax", "memory"
+        );
+    }
+}
+
 void launch_kernel(void) {
     vga_initialize();
     vga_print_string("Welcome to RawBerry OS!\n");
@@ -160,6 +209,11 @@ void launch_kernel(void) {
             fat_test();
         } else if(strEql(strSlice(Keyboard_buffer, 0, 3), "get") == 0){
             get_data();
+        } else if(strEql(strSlice(Keyboard_buffer, 0, 3), "tew") == 0){
+            uint8_t a[5] = {0xB8, 0x42, 0x00, 0x00, 0x00};
+            exec_test(a);
+        } else if(strEql(strSlice(Keyboard_buffer, 0, 3), "ter") == 0){
+            exec_read();
         } 
     }
     return;
